@@ -1,22 +1,18 @@
 /*
 nucon. nucon is a program that tries to prove is own consistency.
 Copyright (C) 2022  p64egor
-
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either version 2
 of the License, or (at your option) any later version.
-
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
-
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-
 
 #include "MyDefines.hpp"
 #include "Console.hpp"
@@ -41,49 +37,49 @@ void test();
 int main()
 {
     qpc("Program Started.");
-	test();
-	qpc("Program Over.");
-	qgi();
-	return 0;
+    test();
+    qpc("Program Over.");
+    qgi();
+    return 0;
 }
 
 
 
 void test()
 {
-	CProver prover;
-	CPrinter printer;
+    CProver prover;
+    CPrinter printer;
 
-	g_prover = &prover;
+    g_prover = &prover;
 
-	qpc("=====Statements=====");
-	std::vector<Statement> statements = prover.statements();
+    qpc("=====Statements=====");
+    std::vector<Statement> statements = prover.statements();
 
-	for (auto s : statements)
-	{
-		qp(s.Name);
-	}
+    for (auto s : statements)
+    {
+        qp(s.Name);
+    }
 
-	qpc("====================");
+    qpc("====================");
 
-	qpc("");
+    qpc("");
 
 
-	std::vector<std::string> forms;
-	forms.push_back("True");
-	forms.push_back("X -> (True -> X)");
-	forms.push_back(negated_text("X -> (True -> X)"));
-	forms.push_back("2p2e4");
-	forms.push_back(negated_text("2p2e4"));
+    std::vector<std::string> forms;
+    forms.push_back("True");
+    forms.push_back("X -> (True -> X)");
+    forms.push_back(negated_text("X -> (True -> X)"));
+    forms.push_back("2p2e4");
+    forms.push_back(negated_text("2p2e4"));
 
-	forms.push_back("2p2e4 -> 2p2e4");
+    forms.push_back("2p2e4 -> 2p2e4");
     forms.push_back(negated_text("2p2e4 -> 2p2e4"));
 
-	forms.push_back("2p2e4 -> True");
+    forms.push_back("2p2e4 -> True");
     forms.push_back(negated_text("2p2e4 -> True"));
 
-	forms.push_back("2p2e5");
-	forms.push_back(negated_text("2p2e5"));
+    forms.push_back("2p2e5");
+    forms.push_back(negated_text("2p2e5"));
 
     forms.push_back(g_godelText);
     forms.push_back(negated_text(g_godelText));
@@ -101,14 +97,14 @@ void test()
 
 
     qpc("===========================");
-	printer.print_provability_tests(ProveType::Axiom, forms);
+    printer.print_provability_tests(ProveType::Axiom, forms);
     qpc("===========================");
-	printer.print_provability_tests(ProveType::Program, forms);
+    printer.print_provability_tests(ProveType::Program, forms);
     qpc("===========================");
-	printer.print_provability_tests(ProveType::Unspecified, forms);
+    printer.print_provability_tests(ProveType::Unspecified, forms);
     qpc("===========================");
 
-	qpc("Test(s) finished.");
+    qpc("Test(s) finished.");
 
 
 }

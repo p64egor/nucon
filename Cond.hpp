@@ -11,7 +11,7 @@
 
 class LockedFunc
 {
-    public:
+public:
     LockedFunc();
     LockedFunc(const std::string& strStatementOwner, CondFunc func);
     LockedFunc(const std::string& strStatementOwner, CondFunc func, const std::vector<std::string>& apiRefs);
@@ -26,7 +26,7 @@ class LockedFunc
 
     uint32_t indexForAPIRef(const std::string& strRefToFind);
 
-    private:
+private:
     std::string m_owner;
     std::vector<std::string> m_apiRefs;
 

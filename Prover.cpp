@@ -1,3 +1,19 @@
+/*
+nucon. nucon is a program that tries to prove is own consistency.
+Copyright (C) 2022  p64egor
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
+
 #include "Prover.hpp"
 
 #include "MyDefines.hpp"
@@ -93,22 +109,22 @@ std::vector<std::string> makeRefs(const std::string& strList)
 
 bool implies(bool bL, bool bR)
 {
-	return !(bL && !bR);
+    return !(bL && !bR);
 }
 
 bool modus_ponens_holds(bool bL, bool bR)
 {
-	return (bL && implies(bL, bR));
+    return (bL && implies(bL, bR));
 }
 
 bool true_provable(bool bConclusion)
 {
-	return modus_ponens_holds(true, bConclusion);
+    return modus_ponens_holds(true, bConclusion);
 }
 
 bool true_disprovable(bool bConclusion)
 {
-	return modus_ponens_holds(true, !bConclusion);
+    return modus_ponens_holds(true, !bConclusion);
 }
 
 
@@ -124,88 +140,88 @@ bool x_implies_true_implies_x(LockedFunc* pFunc)
 bool true_truth(LockedFunc* pFunc)
 {
     return implies(true, true);
-	//return (1 == 1);
+    //return (1 == 1);
 }
 
 bool false_truth(LockedFunc* pFunc)
 {
     return implies(true, false);
-	//return (0 == 1);
+    //return (0 == 1);
 }
 
 
 
 bool induc_holds(const std::vector<uint8_t>& v)
 {
-	if (v.size() == 0)
-	{
-		return false;
-	}
+    if (v.size() == 0)
+    {
+        return false;
+    }
 
 
-	if (v[0])
-	{
-		for (uint32_t iii = 0; iii < v.size(); ++iii)
-		{
-			if (iii == v.size() - 1)
-			{
-				break;
-			}
+    if (v[0])
+    {
+        for (uint32_t iii = 0; iii < v.size(); ++iii)
+        {
+            if (iii == v.size() - 1)
+            {
+                break;
+            }
 
-			if (!implies(v[iii], v[iii+1]))
-			{
-				return false;
-			}
-		}
+            if (!implies(v[iii], v[iii+1]))
+            {
+                return false;
+            }
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	return false;
+    return false;
 }
 
 
 bool statement_induc_holds(const Statement& statement)
 {
-	std::vector<uint8_t> results;
-	for (auto c : statement.Conds)
-	{
-		const bool b = c.Func();
-		results.push_back(b);
-	}
+    std::vector<uint8_t> results;
+    for (auto c : statement.Conds)
+    {
+        const bool b = c.Func();
+        results.push_back(b);
+    }
 
-	const bool bIH = induc_holds(results);
+    const bool bIH = induc_holds(results);
 
-	if (statement.Negated)
-	{
-		return true_disprovable(bIH);
-	}
+    if (statement.Negated)
+    {
+        return true_disprovable(bIH);
+    }
 
-	return bIH;
+    return bIH;
 }
 
 
 
 CProver::CProver() : m_bInit(false)
 {
-	setup();
+    setup();
 }
 
 void CProver::add(const Statement& statement)
 {
-	if (m_bInit)
-	{
-		// no adding allowed once initialized.
-		return;
-	}
+    if (m_bInit)
+    {
+        // no adding allowed once initialized.
+        return;
+    }
 
-	if (exists(statement.Name))
-	{
-		return;
-	}
+    if (exists(statement.Name))
+    {
+        return;
+    }
 
-	// prevent some circular statements from being added.
-	for (auto c : statement.Conds)
+    // prevent some circular statements from being added.
+    for (auto c : statement.Conds)
     {
         if (c.has_api_ref(statement.Name) || c.has_api_ref(opposite_of(statement.Name)))
         {
@@ -215,9 +231,9 @@ void CProver::add(const Statement& statement)
 
 
 
-	m_statements.push_back(statement);
+    m_statements.push_back(statement);
 
-	if (statement.Axiom)
+    if (statement.Axiom)
     {
         add_as_proved(statement.Name, ProveType::Unspecified);
     }
@@ -225,21 +241,21 @@ void CProver::add(const Statement& statement)
 
 std::vector<Statement>& CProver::statements()
 {
-	return m_statements;
+    return m_statements;
 }
 
 
 bool CProver::exists(const std::string& strStatement)
 {
-	for (auto s : m_statements)
-	{
-		if (s.Name == strStatement)
-		{
-			return true;
-		}
-	}
+    for (auto s : m_statements)
+    {
+        if (s.Name == strStatement)
+        {
+            return true;
+        }
+    }
 
-	return false;
+    return false;
 }
 
 
@@ -249,12 +265,12 @@ bool CProver::statement_ref_statement(const std::string& strStatement, const std
     bool bFound = false;
     for (auto s : m_statements)
     {
-		if (s.Name == strStatement)
-		{
-		    statement = s;
-		    bFound = true;
-		    break;
-		}
+        if (s.Name == strStatement)
+        {
+            statement = s;
+            bFound = true;
+            break;
+        }
     }
 
     if (!bFound)
@@ -262,7 +278,7 @@ bool CProver::statement_ref_statement(const std::string& strStatement, const std
         return false;
     }
 
-	return statement_ref_statement(statement, strToFind);
+    return statement_ref_statement(statement, strToFind);
 }
 
 bool CProver::statement_ref_statement(const Statement& statement, const std::string& strToFind)
@@ -277,16 +293,16 @@ bool CProver::statement_ref_statement(const Statement& statement, const std::str
         return true;
     }
 
-	return false;
+    return false;
 }
 
 
 bool CProver::statement_has_func(const std::string& strStatement, CondFunc func)
 {
-	for (auto s : m_statements)
-	{
-		if (s.Name == strStatement)
-		{
+    for (auto s : m_statements)
+    {
+        if (s.Name == strStatement)
+        {
             for (auto c : s.Conds)
             {
                 if (c.has_cond_func(func))
@@ -296,71 +312,71 @@ bool CProver::statement_has_func(const std::string& strStatement, CondFunc func)
             }
 
             break;
-		}
-	}
+        }
+    }
 
-	return false;
+    return false;
 }
 
 
 
 Statement CProver::setup_statement(const std::string& strFormulaName, const std::vector<Cond>& conds, const bool bAxiom)
 {
-	Statement invalid;
-	invalid.Name = "ERROR";
+    Statement invalid;
+    invalid.Name = "ERROR";
 
-	if (!exists(strFormulaName))
-	{
+    if (!exists(strFormulaName))
+    {
 
-		Statement st;
+        Statement st;
 
-		st.Name = strFormulaName;
-		st.Axiom = bAxiom;
+        st.Name = strFormulaName;
+        st.Axiom = bAxiom;
 
-		for (auto c : conds)
+        for (auto c : conds)
         {
-     		st.Conds.push_back(c);
+            st.Conds.push_back(c);
         }
 
-		add(st);
+        add(st);
 
-		return st;
+        return st;
 
-	}
+    }
 
-	for (auto s : m_statements)
-	{
-		if (s.Name == strFormulaName)
-		{
-			return s;
-		}
+    for (auto s : m_statements)
+    {
+        if (s.Name == strFormulaName)
+        {
+            return s;
+        }
 
-	}
+    }
 
-	return invalid;
+    return invalid;
 }
 
 Statement CProver::setup_statement(const std::string& strFormulaName, Cond cond, const bool bAxiom)
 {
 
-	std::vector<Cond> conds;
-	conds.push_back(cond);
+    std::vector<Cond> conds;
+    conds.push_back(cond);
 
-	return setup_statement(strFormulaName, conds, bAxiom);
+    return setup_statement(strFormulaName, conds, bAxiom);
 }
 
 
 Statement CProver::false_statement()
 {
     Cond cond = Cond("False", false_truth);
-	return setup_statement("False", cond);
+    return setup_statement("False", cond);
 
 }
 
 Statement CProver::true_statement()
 {
     Cond cond = Cond("True", true_truth);
-	return setup_statement("True", cond);
+    return setup_statement("True", cond);
 
 }
 
@@ -368,80 +384,80 @@ Statement CProver::true_statement()
 Statement CProver::con_statement()
 {
     Cond cond = Cond("Con", prover_consistent);
-	return setup_statement("Con", cond);
+    return setup_statement("Con", cond);
 }
 
 
 
 void CProver::setup()
 {
-	m_bInit = false;
+    m_bInit = false;
 
-	g_prover = this;
+    g_prover = this;
 
-	m_proving.clear();
-	m_proved.clear();
+    m_proving.clear();
+    m_proved.clear();
 
-	m_statements.clear();
+    m_statements.clear();
 
 
 
-	add(false_statement());
-	add(true_statement());
+    add(false_statement());
+    add(true_statement());
 
-	add(con_statement());
+    add(con_statement());
 
-	Statement fif;
-	fif.Name = "False -> False";
-	fif.LHS = "False";
-	fif.RHS = "False";
-	fif.Implication = true;
-	g_prover->add(fif);
+    Statement fif;
+    fif.Name = "False -> False";
+    fif.LHS = "False";
+    fif.RHS = "False";
+    fif.Implication = true;
+    g_prover->add(fif);
 
-	Statement tit;
-	tit.Name = "True -> True";
-	tit.LHS = "True";
-	tit.RHS = "True";
-	tit.Implication = true;
-	g_prover->add(tit);
+    Statement tit;
+    tit.Name = "True -> True";
+    tit.LHS = "True";
+    tit.RHS = "True";
+    tit.Implication = true;
+    g_prover->add(tit);
 
-	Statement fit;
-	fit.Name = "False -> True";
-	fit.LHS = "False";
-	fit.RHS = "True";
-	fit.Implication = true;
-	g_prover->add(fit);
+    Statement fit;
+    fit.Name = "False -> True";
+    fit.LHS = "False";
+    fit.RHS = "True";
+    fit.Implication = true;
+    g_prover->add(fit);
 
-	Cond condxtx = Cond("X -> (True -> X)", x_implies_true_implies_x);
+    Cond condxtx = Cond("X -> (True -> X)", x_implies_true_implies_x);
     setup_statement("X -> (True -> X)", condxtx, true);
 
     setup_misc_props();
 
-	std::vector<Statement> negated;
-	for (auto s : m_statements)
-	{
-		Statement ns = s;
-		ns.Negated = !ns.Negated;
-		if (ns.Axiom)
+    std::vector<Statement> negated;
+    for (auto s : m_statements)
+    {
+        Statement ns = s;
+        ns.Negated = !ns.Negated;
+        if (ns.Axiom)
         {
             ns.Axiom = false;
         }
 
-		ns.Name = negated_text(ns.Name);
-		negated.push_back(ns);
-	}
+        ns.Name = negated_text(ns.Name);
+        negated.push_back(ns);
+    }
 
-	for (auto s : negated)
-	{
-		add(s);
-	}
+    for (auto s : negated)
+    {
+        add(s);
+    }
 
-	std::vector<Statement> negif;
-	for (auto s : m_statements)
-	{
-		Statement ns = s;
+    std::vector<Statement> negif;
+    for (auto s : m_statements)
+    {
+        Statement ns = s;
 
-		if (ns.Negated)
+        if (ns.Negated)
         {
 
             ns.Negated = !ns.Negated;
@@ -455,9 +471,9 @@ void CProver::setup()
             ns.Conds.clear();
             negif.push_back(ns);
         }
-	}
+    }
 
-	for (auto s : negif)
+    for (auto s : negif)
     {
         add(s);
     }
@@ -482,25 +498,25 @@ void CProver::setup()
         add(s);
     }
 
-	std::vector<Statement> fips;
-	for (auto s : m_statements)
-	{
-	    if (s.Name == "False" && !s.Negated)
+    std::vector<Statement> fips;
+    for (auto s : m_statements)
+    {
+        if (s.Name == "False" && !s.Negated)
         {
             continue;
         }
 
-		Statement fis;
-		fis.Name = std::string("False -> ") + "(" + s.Name + ")";
+        Statement fis;
+        fis.Name = std::string("False -> ") + "(" + s.Name + ")";
 
-		fis.LHS = "False";
-		fis.RHS = s.Name;
-		fis.Implication = true;
-		fips.push_back(fis);
-	}
+        fis.LHS = "False";
+        fis.RHS = s.Name;
+        fis.Implication = true;
+        fips.push_back(fis);
+    }
 
 
-	for (auto s : fips)
+    for (auto s : fips)
     {
         add(s);
     }
@@ -509,7 +525,7 @@ void CProver::setup()
 
 
 
-	m_bInit = true;
+    m_bInit = true;
 
 }
 
@@ -542,7 +558,7 @@ bool CProver::provable(const std::string& strStatement, const ProveType pt)
     }
 
 
-	if (proved(strStatement, ProveType::Unspecified))
+    if (proved(strStatement, ProveType::Unspecified))
     {
         return true;
     }
@@ -560,19 +576,19 @@ bool CProver::provable(const std::string& strStatement, const ProveType pt)
     }
 
 
-	if (is_proving(strStatement))
-	{
+    if (is_proving(strStatement))
+    {
         return false;
-	}
+    }
 
 
 
-	m_proving.push_back(strStatement);
+    m_proving.push_back(strStatement);
 
 
     // ===================
-	const bool bEnableProvInfer = true;
-	if (bEnableProvInfer)
+    const bool bEnableProvInfer = true;
+    if (bEnableProvInfer)
     {
         const bool bR0 = true;
         const bool bR1 = true;
@@ -848,67 +864,67 @@ bool CProver::provable(const std::string& strStatement, const ProveType pt)
         return false;
     }
 
-	for (auto s : m_statements)
-	{
-		if (s.Name == strStatement)
-		{
-		    // this loop does not handle implications
-		    if (s.Implication)
+    for (auto s : m_statements)
+    {
+        if (s.Name == strStatement)
+        {
+            // this loop does not handle implications
+            if (s.Implication)
             {
                 break;
             }
 
-			if (strStatement == "False")
-			{
-					const bool sb1 = statement_provably_holds(s);
-					const bool bCon = consistent();
-
-					const bool sb2 = (sb1 || !bCon);
-
-
-                    remove_from_proving(strStatement);
-
-                    if (sb2)
-                    {
-                        add_as_proved(strStatement, ProveType::Program);
-                    }
-
-					return sb2;
-			}
-			else if (strStatement == negated_text("True"))
+            if (strStatement == "False")
             {
-					const bool sb1 = statement_provably_holds(s);
-					const bool bCon = consistent();
+                const bool sb1 = statement_provably_holds(s);
+                const bool bCon = consistent();
 
-					const bool sb2 = (sb1 || !bCon);
+                const bool sb2 = (sb1 || !bCon);
 
 
-                    remove_from_proving(strStatement);
+                remove_from_proving(strStatement);
 
-                    if (sb2)
-                    {
-                        add_as_proved(strStatement, ProveType::Program);
-                    }
+                if (sb2)
+                {
+                    add_as_proved(strStatement, ProveType::Program);
+                }
 
-					return sb2;
+                return sb2;
+            }
+            else if (strStatement == negated_text("True"))
+            {
+                const bool sb1 = statement_provably_holds(s);
+                const bool bCon = consistent();
+
+                const bool sb2 = (sb1 || !bCon);
+
+
+                remove_from_proving(strStatement);
+
+                if (sb2)
+                {
+                    add_as_proved(strStatement, ProveType::Program);
+                }
+
+                return sb2;
             }
 
 
-			const bool b = statement_provably_holds(s);
+            const bool b = statement_provably_holds(s);
 
-			remove_from_proving(strStatement);
+            remove_from_proving(strStatement);
 
-			if (b)
+            if (b)
             {
                 add_as_proved(strStatement, ProveType::Program);
             }
 
-			return b;
-		}
-	}
+            return b;
+        }
+    }
 
-	remove_from_proving(strStatement);
-	return false;
+    remove_from_proving(strStatement);
+    return false;
 }
 
 
@@ -919,28 +935,28 @@ bool CProver::not_provable(const std::string& strStatement, const ProveType pt)
 
 bool CProver::is_proving(const std::string& strFormula)
 {
-	for (auto s : m_proving)
-	{
-		if (s == strFormula)
-		{
-			return true;
-		}
-	}
+    for (auto s : m_proving)
+    {
+        if (s == strFormula)
+        {
+            return true;
+        }
+    }
 
-	return false;
+    return false;
 }
 
 bool CProver::known_as_circular(const std::string& strFormula)
 {
-	for (auto s : m_circular)
-	{
-		if (s == strFormula)
-		{
-			return true;
-		}
-	}
+    for (auto s : m_circular)
+    {
+        if (s == strFormula)
+        {
+            return true;
+        }
+    }
 
-	return false;
+    return false;
 }
 
 bool CProver::proved(const std::string& strFormula, const ProveType pt)
@@ -980,23 +996,23 @@ bool CProver::proved(const std::string& strFormula, const ProveType pt)
 
 void CProver::remove_from_proving(const std::string& strFormula)
 {
-	const uint32_t nNegativeU32 = -1;
+    const uint32_t nNegativeU32 = -1;
 
-	uint32_t nIndex = nNegativeU32;
+    uint32_t nIndex = nNegativeU32;
 
-	for (uint32_t iii = 0; iii < m_proving.size(); ++iii)
-	{
-		if (m_proving[iii] == strFormula)
-		{
-			nIndex = iii;
-			break;
-		}
-	}
+    for (uint32_t iii = 0; iii < m_proving.size(); ++iii)
+    {
+        if (m_proving[iii] == strFormula)
+        {
+            nIndex = iii;
+            break;
+        }
+    }
 
-	if (nIndex != nNegativeU32)
-	{
-		m_proving.erase(m_proving.begin() + nIndex);
-	}
+    if (nIndex != nNegativeU32)
+    {
+        m_proving.erase(m_proving.begin() + nIndex);
+    }
 
 }
 
@@ -1111,8 +1127,8 @@ void CProver::add_as_circular(const std::string& strFormula)
 
 bool CProver::consistent()
 {
-	const bool bResult = prover_consistent(nullptr);
-	return bResult;
+    const bool bResult = prover_consistent(nullptr);
+    return bResult;
 }
 
 
@@ -1120,7 +1136,7 @@ bool CProver::consistent()
 
 bool statement_holds(const Statement& statement)
 {
-	if (statement.Implication)
+    if (statement.Implication)
     {
         bool bL = false;
         bool bR = false;
@@ -1198,7 +1214,7 @@ bool statement_holds(const Statement& statement)
 
 bool statement_provably_holds(const Statement& statement)
 {
-	if (statement.Implication)
+    if (statement.Implication)
     {
         bool bL = false;
         bool bR = false;
@@ -1254,7 +1270,7 @@ bool statement_provably_holds(const Statement& statement)
 
 
 
-	if (detected_any_conds_have_self_ref(statement))
+    if (detected_any_conds_have_self_ref(statement))
     {
         // Even if induction holds across the condition of a statement.
         // we do not say the statement is provableble if a self-ref was present.
@@ -1380,12 +1396,12 @@ bool direct_ref_not_false(const Statement& statement)
 
 bool propA(LockedFunc* pFunc)
 {
-	return (2 + 2 == 4);
+    return (2 + 2 == 4);
 }
 
 bool propB(LockedFunc* pFunc)
 {
-	return (2 + 2 == 5);
+    return (2 + 2 == 5);
 }
 
 
@@ -1414,58 +1430,58 @@ void setup_misc_props()
     g_prover->add(ncon);
     */
 
-	Statement st2p2e4;
-	st2p2e4.Name = "2p2e4";
-	st2p2e4.Conds.push_back(Cond("2p2e4", propA));
-	g_prover->add(st2p2e4);
+    Statement st2p2e4;
+    st2p2e4.Name = "2p2e4";
+    st2p2e4.Conds.push_back(Cond("2p2e4", propA));
+    g_prover->add(st2p2e4);
 
 
-	Statement aiast2p2e4;
-	aiast2p2e4.Name = "2p2e4 -> 2p2e4";
-	aiast2p2e4.Implication = true;
-	aiast2p2e4.LHS = "2p2e4";
-	aiast2p2e4.RHS = "2p2e4";
-	g_prover->add(aiast2p2e4);
+    Statement aiast2p2e4;
+    aiast2p2e4.Name = "2p2e4 -> 2p2e4";
+    aiast2p2e4.Implication = true;
+    aiast2p2e4.LHS = "2p2e4";
+    aiast2p2e4.RHS = "2p2e4";
+    g_prover->add(aiast2p2e4);
 
 
-	Statement gfrd;
-	gfrd.Name = "2p2e4 -> True";
-	gfrd.Implication = true;
-	gfrd.LHS = "2p2e4";
-	gfrd.RHS = "True";
-	g_prover->add(gfrd);
+    Statement gfrd;
+    gfrd.Name = "2p2e4 -> True";
+    gfrd.Implication = true;
+    gfrd.LHS = "2p2e4";
+    gfrd.RHS = "True";
+    g_prover->add(gfrd);
 
-	Statement st2p2e5;
-	st2p2e5.Name = "2p2e5";
-	st2p2e5.Conds.push_back(Cond("2p2e5",propB));
-	g_prover->add(st2p2e5);
-
-
-	Statement tinucon;
-	tinucon.Name = "True -> NuCon";
-	tinucon.Implication = true;
-	tinucon.LHS = "True";
-	tinucon.RHS = "NuCon";
-
-	g_prover->add(tinucon);
+    Statement st2p2e5;
+    st2p2e5.Name = "2p2e5";
+    st2p2e5.Conds.push_back(Cond("2p2e5",propB));
+    g_prover->add(st2p2e5);
 
 
+    Statement tinucon;
+    tinucon.Name = "True -> NuCon";
+    tinucon.Implication = true;
+    tinucon.LHS = "True";
+    tinucon.RHS = "NuCon";
 
-	Statement g;
-	g.Name = g_godelText;
-	g.Conds.push_back(Cond(g_godelText, propC, makeRefs(g_godelText)));
-	g_prover->add(g);
-
-
-	Statement secit;
-	secit.Name = g_secondIncText;
-	secit.Implication = true;
-	secit.LHS = "Con";
-	secit.RHS = g_godelText;
-	secit.Axiom = true;
+    g_prover->add(tinucon);
 
 
-	g_prover->add(secit);
+
+    Statement g;
+    g.Name = g_godelText;
+    g.Conds.push_back(Cond(g_godelText, propC, makeRefs(g_godelText)));
+    g_prover->add(g);
+
+
+    Statement secit;
+    secit.Name = g_secondIncText;
+    secit.Implication = true;
+    secit.LHS = "Con";
+    secit.RHS = g_godelText;
+    secit.Axiom = true;
+
+
+    g_prover->add(secit);
 
 
 
@@ -1473,13 +1489,13 @@ void setup_misc_props()
 
 bool prover_consistent(LockedFunc* pFunc)
 {
-	if (g_prover == nullptr)
-	{
-		return false;
-	}
+    if (g_prover == nullptr)
+    {
+        return false;
+    }
 
-	/*
-	if (g_prover->proved("Con", ProveType::Unspecified))
+    /*
+    if (g_prover->proved("Con", ProveType::Unspecified))
     {
         return true;
     }
@@ -1495,10 +1511,10 @@ bool prover_consistent(LockedFunc* pFunc)
 
     g_bComputingCon = true;
 
-	std::vector<Statement>& statements = g_prover->statements();
+    std::vector<Statement>& statements = g_prover->statements();
 
-	for (auto s : statements)
-	{
+    for (auto s : statements)
+    {
 
         if (g_prover->proved(s.Name, ProveType::Unspecified) && g_prover->proved(opposite_of(s.Name), ProveType::Unspecified))
         {
@@ -1507,10 +1523,10 @@ bool prover_consistent(LockedFunc* pFunc)
         }
 
         // these are important to keep
-		if (refcon(s))
-		{
-		    continue;
-		}
+        if (refcon(s))
+        {
+            continue;
+        }
 
 
         if (g_prover->statement_ref_statement(s.Name, "Con"))
@@ -1550,41 +1566,41 @@ bool prover_consistent(LockedFunc* pFunc)
 
 
 
-		if (s.Name == "False" || s.Name == negated_text("True"))
+        if (s.Name == "False" || s.Name == negated_text("True"))
         {
             continue;
         }
 
-		if (s.Name == "True" || s.Name == negated_text("False"))
+        if (s.Name == "True" || s.Name == negated_text("False"))
         {
             continue;
         }
 
 
-		if (true_provable(statement_holds(s)) && true_disprovable(statement_holds(s)))
-		{
+        if (true_provable(statement_holds(s)) && true_disprovable(statement_holds(s)))
+        {
             g_bComputingCon = false;
-			return false;
-		}
+            return false;
+        }
 
-		bool bP1 = false;
-		bP1 = g_prover->provable(s.Name, ProveType::Program);
+        bool bP1 = false;
+        bP1 = g_prover->provable(s.Name, ProveType::Program);
 
-		bool bP2 = false;
+        bool bP2 = false;
         bP2 = g_prover->provable(opposite_of(s.Name), ProveType::Program);
 
 
-		if (bP1 && bP2)
+        if (bP1 && bP2)
         {
             g_bComputingCon = false;
-			return false;
+            return false;
         }
 
 
 
-	}
+    }
 
     g_bComputingCon = false;
 
-	return true;
+    return true;
 }

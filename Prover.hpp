@@ -1,22 +1,19 @@
 /*
 nucon. nucon is a program that tries to prove is own consistency.
 Copyright (C) 2022  p64egor
-
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either version 2
 of the License, or (at your option) any later version.
-
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
-
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-	
+
 #ifndef PROVER_HPP
 #define PROVER_HPP
 
@@ -69,19 +66,19 @@ bool propC(LockedFunc* pFunc);
 
 struct Statement
 {
-	Statement();
+    Statement();
 
-	std::string Name;
-	std::vector<Cond> Conds;
+    std::string Name;
+    std::vector<Cond> Conds;
 
-	std::string LHS;
-	std::string RHS;
+    std::string LHS;
+    std::string RHS;
 
-	bool Implication;
+    bool Implication;
 
-	bool Negated;
+    bool Negated;
 
-	bool Axiom;
+    bool Axiom;
 };
 
 bool detected_any_conds_have_self_ref(const Statement& statement);
@@ -125,62 +122,62 @@ void setup_misc_props();
 
 class CProver
 {
-	public:
-	CProver();
+public:
+    CProver();
 
-	void add(const Statement& statement);
+    void add(const Statement& statement);
 
-	std::vector<Statement>& statements();
+    std::vector<Statement>& statements();
 
-	bool exists(const std::string& strStatement);
+    bool exists(const std::string& strStatement);
 
     bool statement_ref_statement(const std::string& strStatement, const std::string& strToFind);
     bool statement_ref_statement(const Statement& statement, const std::string& strToFind);
 
-	bool statement_has_func(const std::string& strStatement, CondFunc func);
+    bool statement_has_func(const std::string& strStatement, CondFunc func);
 
     Statement setup_statement(const std::string& strFormulaName, const std::vector<Cond>& conds, const bool bAxiom = false);
     Statement setup_statement(const std::string& strFormulaName, Cond cond, const bool bAxiom = false);
 
-	Statement false_statement();
-	Statement true_statement();
-	Statement con_statement();
+    Statement false_statement();
+    Statement true_statement();
+    Statement con_statement();
 
-	bool consistent();
+    bool consistent();
 
-	bool known_as_circular(const std::string& strForumula);
-	bool is_proving(const std::string& strFormula);
-	bool proved(const std::string& strFormula, const ProveType pt);
+    bool known_as_circular(const std::string& strForumula);
+    bool is_proving(const std::string& strFormula);
+    bool proved(const std::string& strFormula, const ProveType pt);
 
 
 
-	protected:
-	bool provable(const std::string& strStatement, const ProveType pt);
-	bool not_provable(const std::string& strStatement, const ProveType pt);
+protected:
+    bool provable(const std::string& strStatement, const ProveType pt);
+    bool not_provable(const std::string& strStatement, const ProveType pt);
 
-	friend class LockedFunc;
-	friend class CPrinter;
+    friend class LockedFunc;
+    friend class CPrinter;
     friend bool prover_consistent(LockedFunc* pFunc);
 
-	private:
-	std::vector<Statement> m_statements;
+private:
+    std::vector<Statement> m_statements;
 
-	std::vector<std::string> m_proving;
-	std::vector<ProvedStatement> m_proved;
+    std::vector<std::string> m_proving;
+    std::vector<ProvedStatement> m_proved;
 
-	std::vector<std::string> m_circular;
+    std::vector<std::string> m_circular;
 
-	void remove_from_proving(const std::string& strFormula);
+    void remove_from_proving(const std::string& strFormula);
 
-	void clean_proving_cache_of(const std::string& strFormula);
+    void clean_proving_cache_of(const std::string& strFormula);
 
-	void add_as_proved(const std::string& strFormula, const ProveType pt);
-	void add_as_circular(const std::string& strFormula);
+    void add_as_proved(const std::string& strFormula, const ProveType pt);
+    void add_as_circular(const std::string& strFormula);
 
 
-	bool m_bInit;
+    bool m_bInit;
 
-	void setup();
+    void setup();
 
 
 };

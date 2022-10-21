@@ -8,7 +8,7 @@
 
 class CPrinter
 {
-    public:
+public:
     CPrinter();
 
     void print_provability_of(const std::string& strFormulaName, const ProveType pt = ProveType::Axiom);
@@ -16,7 +16,7 @@ class CPrinter
 
 
 
-    private:
+private:
 
 
 };
