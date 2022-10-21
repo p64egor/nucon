@@ -11,7 +11,6 @@ X -> (True -> X)
 2p2e4 -> 2p2e4
 2p2e4 -> True
 2p2e5
-True -> NuCon
 Con -> This statement is not provable.
 !(False)
 !(True)
@@ -24,7 +23,6 @@ Con -> This statement is not provable.
 !(2p2e4 -> 2p2e4)
 !(2p2e4 -> True)
 !(2p2e5)
-!(True -> NuCon)
 !(Con -> This statement is not provable.)
 (False) -> False
 (True) -> False
@@ -37,14 +35,12 @@ Con -> This statement is not provable.
 (2p2e4 -> 2p2e4) -> False
 (2p2e4 -> True) -> False
 (2p2e5) -> False
-(True -> NuCon) -> False
 (Con -> This statement is not provable.) -> False
 !(False) -> !(False)
 !(True) -> !(True)
 !(True) -> !(False)
 !(2p2e4) -> !(2p2e4)
 !(True) -> !(2p2e4)
-!(NuCon) -> !(True)
 !(This statement is not provable.) -> !(Con)
 !(False) -> !(True)
 !(False) -> !(Con)
@@ -56,7 +52,6 @@ Con -> This statement is not provable.
 !(False) -> !(2p2e4 -> 2p2e4)
 !(False) -> !(2p2e4 -> True)
 !(False) -> !(2p2e5)
-!(False) -> !(True -> NuCon)
 !(False) -> !(Con -> This statement is not provable.)
 False -> (True)
 False -> (Con)
@@ -68,7 +63,6 @@ False -> (2p2e4)
 False -> (2p2e4 -> 2p2e4)
 False -> (2p2e4 -> True)
 False -> (2p2e5)
-False -> (True -> NuCon)
 False -> (Con -> This statement is not provable.)
 False -> (!(False))
 False -> (!(True))
@@ -81,7 +75,6 @@ False -> (!(2p2e4))
 False -> (!(2p2e4 -> 2p2e4))
 False -> (!(2p2e4 -> True))
 False -> (!(2p2e5))
-False -> (!(True -> NuCon))
 False -> (!(Con -> This statement is not provable.))
 False -> ((False) -> False)
 False -> ((True) -> False)
@@ -94,14 +87,12 @@ False -> ((2p2e4) -> False)
 False -> ((2p2e4 -> 2p2e4) -> False)
 False -> ((2p2e4 -> True) -> False)
 False -> ((2p2e5) -> False)
-False -> ((True -> NuCon) -> False)
 False -> ((Con -> This statement is not provable.) -> False)
 False -> (!(False) -> !(False))
 False -> (!(True) -> !(True))
 False -> (!(True) -> !(False))
 False -> (!(2p2e4) -> !(2p2e4))
 False -> (!(True) -> !(2p2e4))
-False -> (!(NuCon) -> !(True))
 False -> (!(This statement is not provable.) -> !(Con))
 False -> (!(False) -> !(True))
 False -> (!(False) -> !(Con))
@@ -113,11 +104,11 @@ False -> (!(False) -> !(2p2e4))
 False -> (!(False) -> !(2p2e4 -> 2p2e4))
 False -> (!(False) -> !(2p2e4 -> True))
 False -> (!(False) -> !(2p2e5))
-False -> (!(False) -> !(True -> NuCon))
 False -> (!(False) -> !(Con -> This statement is not provable.))
 ====================
 
 ===========================
+Debug: Proved Con
 
 Attempting to asses provability of True
 True is Axiom provable.
@@ -171,7 +162,7 @@ Attempting to asses provability of False
 False is NOT Axiom provable.
 
 Attempting to asses provability of Con -> This statement is not provable.
-Con -> This statement is not provable. is Axiom provable.
+Con -> This statement is not provable. is NOT Axiom provable.
 
 Attempting to asses provability of !(Con -> This statement is not provable.)
 !(Con -> This statement is not provable.) is NOT Axiom provable.
@@ -231,7 +222,7 @@ Attempting to asses provability of False
 False is NOT Program provable.
 
 Attempting to asses provability of Con -> This statement is not provable.
-Con -> This statement is not provable. is Program provable.
+Con -> This statement is not provable. is NOT Program provable.
 
 Attempting to asses provability of !(Con -> This statement is not provable.)
 !(Con -> This statement is not provable.) is NOT Program provable.
@@ -291,7 +282,7 @@ Attempting to asses provability of False
 False is NOT Unspecified provable.
 
 Attempting to asses provability of Con -> This statement is not provable.
-Con -> This statement is not provable. is Unspecified provable.
+Con -> This statement is not provable. is NOT Unspecified provable.
 
 Attempting to asses provability of !(Con -> This statement is not provable.)
 !(Con -> This statement is not provable.) is NOT Unspecified provable.
@@ -299,4 +290,5 @@ Attempting to asses provability of !(Con -> This statement is not provable.)
 
 ===========================
 Test(s) finished.
+Program Over.
 

@@ -174,6 +174,8 @@ private:
     void add_as_proved(const std::string& strFormula, const ProveType pt);
     void add_as_circular(const std::string& strFormula);
 
+    // if the lhs of an implication is provable and happens to imply strFormula
+    bool any_wff_implication_supports(const std::string& strFormula);
 
     bool m_bInit;
 

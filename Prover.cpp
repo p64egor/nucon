@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "StringOps.hpp"
 
 bool g_bComputingCon = false;
-bool g_bComputingNuCon = false;
+
 
 CProver* g_prover = nullptr;
 
@@ -221,14 +221,19 @@ void CProver::add(const Statement& statement)
     }
 
     // prevent some circular statements from being added.
-    for (auto c : statement.Conds)
-    {
-        if (c.has_api_ref(statement.Name) || c.has_api_ref(opposite_of(statement.Name)))
-        {
-            return;
-        }
-    }
+    const bool bEnableAPIScreening = true;
 
+    if (bEnableAPIScreening)
+    {
+        for (auto c : statement.Conds)
+        {
+            if (c.has_api_ref(statement.Name) || c.has_api_ref(opposite_of(statement.Name)))
+            {
+                return;
+            }
+        }
+
+    }
 
 
     m_statements.push_back(statement);
@@ -538,10 +543,7 @@ bool CProver::provable(const std::string& strStatement, const ProveType pt)
         return true;
     }
 
-    if (known_as_circular(strStatement))
-    {
-        return false;
-    }
+
 
     if (is_proving(strStatement) && m_proving.size() > 1)
     {
@@ -564,6 +566,28 @@ bool CProver::provable(const std::string& strStatement, const ProveType pt)
     }
 
 
+    /*
+        We must respect that if we proved two theories to which we
+        can deduce strStatement, that we do so.
+        Even if the strStatement is circular.
+    */
+    for (auto s : m_statements)
+    {
+        if (s.Name == strStatement)
+        {
+            if (any_wff_implication_supports(s.Name))
+            {
+                add_as_proved(strStatement, ProveType::Unspecified);
+                return true;
+            }
+        }
+    }
+
+
+    if (known_as_circular(strStatement))
+    {
+        return false;
+    }
 
     if (strStatement == "True" || strStatement == negated_text("False"))
     {
@@ -629,6 +653,7 @@ bool CProver::provable(const std::string& strStatement, const ProveType pt)
                     }
                 }
 
+
                 if (bR1)
                 {
                     if (s.Implication && !s.Negated)
@@ -658,15 +683,20 @@ bool CProver::provable(const std::string& strStatement, const ProveType pt)
 
 
                 // implications involving consistency shall not be handled axiom-wise.
+                // unless Con Or !Con has been proved.
                 if (bR3)
                 {
-                    if (s.Implication && !s.Negated)
+                    if (!(proved("Con", ProveType::Unspecified) || proved(negated_text("Con"), ProveType::Unspecified)))
                     {
-                        if (refcon(s))
+                        if (s.Implication && !s.Negated)
                         {
-                            break;
+                            if (refcon(s))
+                            {
+                                break;
+                            }
                         }
                     }
+
                 }
 
 
@@ -699,20 +729,16 @@ bool CProver::provable(const std::string& strStatement, const ProveType pt)
                 }
 
 
-                // R6 eliminates Prov('True -> False') scenario..
-                // ..so long as the antecedent is a provably true formula.
-                // Basis: True itself does not imply false.
+                // if we proved the RHS, then we've proved X -> RHS
                 if (bR6)
                 {
                     if (s.Implication && !s.Negated)
                     {
-                        if ((proved(s.LHS, ProveType::Unspecified) || provable(s.LHS, pt)))
+                        if (proved(s.RHS, ProveType::Unspecified))
                         {
-                            if (s.RHS == "False" || s.RHS == negated_text("True"))
-                            {
-                                remove_from_proving(strStatement);
-                                return false;
-                            }
+                            remove_from_proving(strStatement);
+                            add_as_proved(strStatement, ProveType::Unspecified);
+                            return true;
                         }
                     }
                 }
@@ -834,11 +860,14 @@ bool CProver::provable(const std::string& strStatement, const ProveType pt)
                 {
                     if (s.Implication && !s.Negated)
                     {
-                        if (provable(s.LHS, pt) && provable(s.RHS, pt))
+                        if (s.RHS != "False" && s.RHS != negated_text("True"))
                         {
-                            remove_from_proving(strStatement);
-                            add_as_proved(strStatement, pt);
-                            return true;
+                            if (provable(s.LHS, pt) && provable(s.RHS, pt))
+                            {
+                                remove_from_proving(strStatement);
+                                add_as_proved(strStatement, pt);
+                                return true;
+                            }
                         }
                     }
                 }
@@ -1093,10 +1122,20 @@ void CProver::add_as_proved(const std::string& strFormula, const ProveType pt)
 
     }
 
+    if (strFormula == "Con")
+    {
+        qpc("Debug: Proved Con");
+    }
+
+    if (strFormula == g_secondIncText)
+    {
+        qpc("Debug: Proved Godel's Second Inc. Theorem.");
+    }
+
     // for debugging
     if (strFormula == "False" || strFormula == negated_text("True"))
     {
-        fqassert("Warning: False was provable somehow!");
+        qpc("Warning: False was provable somehow!");
     }
 
 
@@ -1122,7 +1161,30 @@ void CProver::add_as_circular(const std::string& strFormula)
 }
 
 
+bool CProver::any_wff_implication_supports(const std::string& strFormula)
+{
 
+    for (auto s : m_statements)
+    {
+        if (s.Implication && !s.Negated)
+        {
+            if (s.RHS == strFormula)
+            {
+                if (proved(s.LHS, ProveType::Unspecified))
+                {
+                    if (proved(s.Name, ProveType::Unspecified) || proved(s.RHS, ProveType::Unspecified))
+                    {
+                        return true;
+                    }
+
+                }
+            }
+
+        }
+    }
+
+    return false;
+}
 
 
 bool CProver::consistent()
@@ -1457,16 +1519,6 @@ void setup_misc_props()
     g_prover->add(st2p2e5);
 
 
-    Statement tinucon;
-    tinucon.Name = "True -> NuCon";
-    tinucon.Implication = true;
-    tinucon.LHS = "True";
-    tinucon.RHS = "NuCon";
-
-    g_prover->add(tinucon);
-
-
-
     Statement g;
     g.Name = g_godelText;
     g.Conds.push_back(Cond(g_godelText, propC, makeRefs(g_godelText)));
@@ -1478,7 +1530,9 @@ void setup_misc_props()
     secit.Implication = true;
     secit.LHS = "Con";
     secit.RHS = g_godelText;
-    secit.Axiom = true;
+
+    // uncomment to potentially cause an issue.
+    //secit.Axiom = true;
 
 
     g_prover->add(secit);
