@@ -55,6 +55,8 @@ public:
 
     bool has_api_ref(const std::string& str) const;
 
+    const std::vector<std::string>& api_refs();
+
 private:
     std::string m_owner;
     LockedFunc m_lfunc;

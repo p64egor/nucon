@@ -126,7 +126,7 @@ class CProver
 public:
     CProver();
 
-    void add(const Statement& statement);
+    void add_to_lang(const Statement& statement);
 
     std::vector<Statement>& statements();
 

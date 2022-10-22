@@ -69,6 +69,11 @@ bool LockedFunc::try_provable(const uint32_t nAPIRefIndex, const ProveType pt)
 
     strStatement = m_apiRefs[nAPIRefIndex];
 
+    if (substr_exists(strStatement, g_provSym) || substr_exists(strStatement, opposite_of(g_provSym)))
+    {
+        return false;
+    }
+
     // can pre-catch a circular loop.
     if (strStatement == m_owner || strStatement == opposite_of(m_owner))
     {
@@ -185,4 +190,9 @@ bool Cond::has_api_ref(const std::string& str) const
     }
 
     return false;
+}
+
+const std::vector<std::string>& Cond::api_refs()
+{
+    return m_apiRefs;
 }

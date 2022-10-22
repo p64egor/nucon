@@ -207,7 +207,7 @@ CProver::CProver() : m_bInit(false)
     setup();
 }
 
-void CProver::add(const Statement& statement)
+void CProver::add_to_lang(const Statement& statement)
 {
     if (m_bInit)
     {
@@ -220,7 +220,7 @@ void CProver::add(const Statement& statement)
         return;
     }
 
-    // prevent some circular statements from being added.
+
     const bool bEnableAPIScreening = true;
 
     if (bEnableAPIScreening)
@@ -233,7 +233,60 @@ void CProver::add(const Statement& statement)
             }
         }
 
+
+        // do not allow conditions with api refs to sentences that do not yet exist.
+        for (auto c : statement.Conds)
+        {
+            const std::vector<std::string>& ar = c.api_refs();
+            for (uint32_t jjj = 0; jjj < ar.size(); ++jjj)
+            {
+                if (!exists(ar[jjj]))
+                {
+                    return;
+                }
+            }
+        }
+
+
     }
+
+
+    const bool bEnableAPIWebScreening = true;
+    if (bEnableAPIWebScreening)
+    {
+
+        for (auto& s : m_statements)
+        {
+            bool b1 = false;
+            bool b2 = false;
+
+            for (auto c : s.Conds)
+            {
+                b1 = b1 || (c.has_api_ref(statement.Name) || c.has_api_ref(opposite_of(statement.Name)));
+                if (b1)
+                {
+                    break;
+                }
+            }
+
+            for (auto c : statement.Conds)
+            {
+                b2 = b2 || (c.has_api_ref(s.Name) || c.has_api_ref(opposite_of(s.Name)));
+                if (b2)
+                {
+                    break;
+                }
+            }
+
+            if (b1 && b2)
+            {
+                return;
+            }
+
+        }
+    }
+
+    // what about much longer chains?
 
 
     m_statements.push_back(statement);
@@ -343,7 +396,7 @@ Statement CProver::setup_statement(const std::string& strFormulaName, const std:
             st.Conds.push_back(c);
         }
 
-        add(st);
+        add_to_lang(st);
 
         return st;
 
@@ -409,31 +462,31 @@ void CProver::setup()
 
 
 
-    add(false_statement());
-    add(true_statement());
+    add_to_lang(false_statement());
+    add_to_lang(true_statement());
 
-    add(con_statement());
+    add_to_lang(con_statement());
 
     Statement fif;
     fif.Name = "False -> False";
     fif.LHS = "False";
     fif.RHS = "False";
     fif.Implication = true;
-    g_prover->add(fif);
+    g_prover->add_to_lang(fif);
 
     Statement tit;
     tit.Name = "True -> True";
     tit.LHS = "True";
     tit.RHS = "True";
     tit.Implication = true;
-    g_prover->add(tit);
+    g_prover->add_to_lang(tit);
 
     Statement fit;
     fit.Name = "False -> True";
     fit.LHS = "False";
     fit.RHS = "True";
     fit.Implication = true;
-    g_prover->add(fit);
+    g_prover->add_to_lang(fit);
 
     Cond condxtx = Cond("X -> (True -> X)", x_implies_true_implies_x);
     setup_statement("X -> (True -> X)", condxtx, true);
@@ -456,7 +509,7 @@ void CProver::setup()
 
     for (auto s : negated)
     {
-        add(s);
+        add_to_lang(s);
     }
 
     std::vector<Statement> negif;
@@ -482,7 +535,7 @@ void CProver::setup()
 
     for (auto s : negif)
     {
-        add(s);
+        add_to_lang(s);
     }
 
     std::vector<Statement> transps;
@@ -502,7 +555,7 @@ void CProver::setup()
 
     for (auto s : transps)
     {
-        add(s);
+        add_to_lang(s);
     }
 
     std::vector<Statement> fips;
@@ -525,7 +578,7 @@ void CProver::setup()
 
     for (auto s : fips)
     {
-        add(s);
+        add_to_lang(s);
     }
 
 
@@ -1558,7 +1611,7 @@ void setup_misc_props()
     Statement st2p2e4;
     st2p2e4.Name = "2p2e4";
     st2p2e4.Conds.push_back(Cond("2p2e4", propA));
-    g_prover->add(st2p2e4);
+    g_prover->add_to_lang(st2p2e4);
 
 
     Statement aiast2p2e4;
@@ -1566,7 +1619,7 @@ void setup_misc_props()
     aiast2p2e4.Implication = true;
     aiast2p2e4.LHS = "2p2e4";
     aiast2p2e4.RHS = "2p2e4";
-    g_prover->add(aiast2p2e4);
+    g_prover->add_to_lang(aiast2p2e4);
 
 
     Statement gfrd;
@@ -1574,18 +1627,18 @@ void setup_misc_props()
     gfrd.Implication = true;
     gfrd.LHS = "2p2e4";
     gfrd.RHS = "True";
-    g_prover->add(gfrd);
+    g_prover->add_to_lang(gfrd);
 
     Statement st2p2e5;
     st2p2e5.Name = "2p2e5";
     st2p2e5.Conds.push_back(Cond("2p2e5",propB));
-    g_prover->add(st2p2e5);
+    g_prover->add_to_lang(st2p2e5);
 
 
     Statement g;
     g.Name = g_godelText;
     g.Conds.push_back(Cond(g_godelText, propC, makeRefs(g_godelText)));
-    g_prover->add(g);
+    g_prover->add_to_lang(g);
 
     Statement gfact;
     gfact.Implication = true;
@@ -1596,7 +1649,7 @@ void setup_misc_props()
     // keep as axiom! ensures if we prove the godel sentence that we prove a contradiction.
     gfact.Axiom = true;
 
-    g_prover->add(gfact);
+    g_prover->add_to_lang(gfact);
 
 
     Statement secit;
@@ -1610,7 +1663,7 @@ void setup_misc_props()
     // secit.Axiom = true;
 
 
-    g_prover->add(secit);
+    g_prover->add_to_lang(secit);
 
 
 
