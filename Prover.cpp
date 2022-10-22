@@ -221,8 +221,24 @@ void CProver::add_to_lang(const Statement& statement)
     }
 
 
-    const bool bEnableAPIScreening = true;
+    const bool bImpliesScreening = true;
+    if (bImpliesScreening)
+    {
+        if(statement.Implication)
+        {
+            if (!substr_exists(statement.LHS, g_provSym) && !substr_exists(statement.RHS, g_provSym))
+            {
+                if (!exists(statement.LHS) || !exists(statement.RHS))
+                {
+                    return;
+                }
+            }
+        }
+    }
 
+
+    const bool bEnableAPIScreening = true;
+    // prevent direct self-ref
     if (bEnableAPIScreening)
     {
         for (auto c : statement.Conds)
@@ -234,6 +250,14 @@ void CProver::add_to_lang(const Statement& statement)
         }
 
 
+    }
+
+
+    // when enabled, powerful way to catch self-refs.
+    const bool bExistenceScreening = true;
+
+    if (bExistenceScreening)
+    {
         // do not allow conditions with api refs to sentences that do not yet exist.
         for (auto c : statement.Conds)
         {
@@ -246,17 +270,20 @@ void CProver::add_to_lang(const Statement& statement)
                 }
             }
         }
-
-
     }
 
-
+    // don't allow two statemens to both directly ref the other.
     const bool bEnableAPIWebScreening = true;
     if (bEnableAPIWebScreening)
     {
 
         for (auto& s : m_statements)
         {
+            if (s.Name == statement.Name)
+            {
+                continue;
+            }
+
             bool b1 = false;
             bool b2 = false;
 
@@ -286,7 +313,6 @@ void CProver::add_to_lang(const Statement& statement)
         }
     }
 
-    // what about much longer chains?
 
 
     m_statements.push_back(statement);
@@ -295,6 +321,26 @@ void CProver::add_to_lang(const Statement& statement)
     {
         add_as_proved(statement.Name, ProveType::Unspecified);
     }
+
+    const bool bEnsureNegWff = true;
+
+    if (bEnsureNegWff)
+    {
+        if (!exists(opposite_of(statement.Name)))
+        {
+            Statement os;
+            os = statement;
+            os.Axiom = false;
+
+            os.Negated = !statement.Negated;
+
+            os.Name = opposite_of(statement.Name);
+
+            m_statements.push_back(os);
+        }
+    }
+
+
 }
 
 std::vector<Statement>& CProver::statements()
@@ -496,15 +542,19 @@ void CProver::setup()
     std::vector<Statement> negated;
     for (auto s : m_statements)
     {
-        Statement ns = s;
-        ns.Negated = !ns.Negated;
-        if (ns.Axiom)
+        if (!exists(opposite_of(s.Name)))
         {
-            ns.Axiom = false;
+            Statement ns = s;
+            ns.Negated = !s.Negated;
+            if (s.Axiom)
+            {
+                ns.Axiom = false;
+            }
+
+            ns.Name = opposite_of(s.Name);
+            negated.push_back(ns);
         }
 
-        ns.Name = negated_text(ns.Name);
-        negated.push_back(ns);
     }
 
     for (auto s : negated)
@@ -634,22 +684,25 @@ bool CProver::provable(const std::string& strStatement, const ProveType pt)
     }
 
 
-    /*
-        We must respect that if we proved two theories to which we
-        can deduce strStatement, that we do so.
-        Even if the strStatement is circular.
-    */
+
     for (auto s : m_statements)
     {
         if (s.Name == strStatement)
         {
+            /*
+                We must respect that if we proved two theories to which we
+                can deduce strStatement, that we do so.
+                Even if the strStatement is circular.
+            */
             if (any_wff_implication_supports(s.Name))
             {
                 add_as_proved(strStatement, ProveType::Unspecified);
                 return true;
             }
+
         }
     }
+
 
 
     if (known_as_circular(strStatement))
@@ -1587,7 +1640,7 @@ bool propB(LockedFunc* pFunc)
 bool propC(LockedFunc* pFunc)
 {
     const uint32_t nAPIRefIndex = pFunc->indexForAPIRef(g_godelText);
-    return !pFunc->try_provable(nAPIRefIndex, ProveType::Program);
+    return !pFunc->probe_provable(nAPIRefIndex, ProveType::Program);
 }
 
 

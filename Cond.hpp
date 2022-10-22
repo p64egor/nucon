@@ -18,7 +18,7 @@ public:
 
     bool execute();
 
-    bool try_provable(const uint32_t nAPIRefIndex, const ProveType pt);
+    bool probe_provable(const uint32_t nAPIRefIndex, const ProveType pt);
 
     bool has_cond_func(CondFunc func) const;
 

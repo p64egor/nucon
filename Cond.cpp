@@ -59,7 +59,7 @@ bool LockedFunc::execute()
     return b;
 }
 
-bool LockedFunc::try_provable(const uint32_t nAPIRefIndex, const ProveType pt)
+bool LockedFunc::probe_provable(const uint32_t nAPIRefIndex, const ProveType pt)
 {
     std::string strStatement = "";
     if (nAPIRefIndex >= m_apiRefs.size())
