@@ -26,7 +26,6 @@ using namespace std;
 
 /*
     todos:
-    -add plausible support for Provability in the statement symbolism.
     -resolve any remaining negation equivalence issues.
     -establish tests for well formedness somehow.
     -lockdown statements so the conds it has can't be called directly but by the Prover.
@@ -67,6 +66,8 @@ void test()
 
     std::vector<std::string> forms;
     forms.push_back("True");
+    forms.push_back(g_provSym + "True");
+
     forms.push_back("X -> (True -> X)");
     forms.push_back(negated_text("X -> (True -> X)"));
     forms.push_back("2p2e4");
@@ -82,13 +83,21 @@ void test()
     forms.push_back(negated_text("2p2e5"));
 
     forms.push_back(g_godelText);
+    forms.push_back(g_provSym + g_godelText);
+
     forms.push_back(negated_text(g_godelText));
+    forms.push_back(g_provSym + negated_text(g_godelText));
+
+
     forms.push_back(negated_text("True"));
 
     forms.push_back("Con");
+    forms.push_back(g_provSym + "Con");
     forms.push_back(negated_text("Con"));
+    forms.push_back(g_provSym + negated_text("Con"));
 
     forms.push_back("False");
+    forms.push_back(g_provSym + "False");
 
 
     forms.push_back(g_secondIncText);

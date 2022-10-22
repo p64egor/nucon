@@ -21,7 +21,7 @@ void CPrinter::print_provability_of(const std::string& strFormulaName, const Pro
     const std::string strPTName = nameForPT(pt);
 
 
-    const bool bProved = g_prover->provable(strFormulaName, pt);
+    const bool bProved = g_prover->try_provable(strFormulaName, pt);
 
     if (bProved)
     {
@@ -49,7 +49,7 @@ void CPrinter::print_provability_tests(const ProveType pt, const std::vector<std
 
         for (auto s : formulas)
         {
-            const bool bProved = g_prover->provable(s, ProveType::Program);
+            const bool bProved = g_prover->try_provable(s, ProveType::Program);
             if (bProved)
             {
                 nProved += 1;
@@ -59,7 +59,7 @@ void CPrinter::print_provability_tests(const ProveType pt, const std::vector<std
 
         for (auto s : formulas)
         {
-            const bool bProved = g_prover->provable(s, ProveType::Program);
+            const bool bProved = g_prover->try_provable(s, ProveType::Program);
             if (bProved)
             {
                 nProved += 1;

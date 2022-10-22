@@ -23,7 +23,8 @@ enum class ProveType
     Empty
 };
 
-
+// keep as one symbol long!
+const static std::string g_provSym = "*";
 
 std::string nameForPT(const ProveType pt);
 

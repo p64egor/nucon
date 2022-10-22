@@ -79,6 +79,7 @@ struct Statement
     bool Negated;
 
     bool Axiom;
+
 };
 
 bool detected_any_conds_have_self_ref(const Statement& statement);
@@ -147,13 +148,17 @@ public:
 
     bool known_as_circular(const std::string& strForumula);
     bool is_proving(const std::string& strFormula);
+
     bool proved(const std::string& strFormula, const ProveType pt);
 
+    bool try_proved(const std::string& strFormula);
 
 
 protected:
-    bool provable(const std::string& strStatement, const ProveType pt);
-    bool not_provable(const std::string& strStatement, const ProveType pt);
+
+    // wrappers
+    bool try_provable(const std::string& strStatement, const ProveType pt);
+    bool try_not_provable(const std::string& strStatement, const ProveType pt);
 
     friend class LockedFunc;
     friend class CPrinter;
@@ -164,6 +169,10 @@ private:
 
     std::vector<std::string> m_proving;
     std::vector<ProvedStatement> m_proved;
+
+
+    std::vector<std::string> m_try_proved;
+
 
     std::vector<std::string> m_circular;
 
@@ -181,6 +190,9 @@ private:
 
     void setup();
 
+
+    bool provable(const std::string& strStatement, const ProveType pt);
+    bool not_provable(const std::string& strStatement, const ProveType pt);
 
 };
 

@@ -88,7 +88,7 @@ bool LockedFunc::try_provable(const uint32_t nAPIRefIndex, const ProveType pt)
         return false;
     }
 
-    return g_prover->provable(strStatement, pt);
+    return g_prover->try_provable(strStatement, pt);
 }
 
 

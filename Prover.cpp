@@ -403,6 +403,8 @@ void CProver::setup()
     m_proving.clear();
     m_proved.clear();
 
+    m_try_proved.clear();
+
     m_statements.clear();
 
 
@@ -537,6 +539,19 @@ void CProver::setup()
 
 bool CProver::provable(const std::string& strStatement, const ProveType pt)
 {
+
+    if (strStatement.size() == 0)
+    {
+        return false;
+    }
+
+    if (strStatement[0] == g_provSym[0])
+    {
+        std::string strProvAlt = strStatement;
+        strProvAlt.erase(strProvAlt.begin());
+
+        return provable(strProvAlt, pt);
+    }
 
     if (proved("False", ProveType::Unspecified) || proved(negated_text("True"), ProveType::Unspecified))
     {
@@ -753,7 +768,7 @@ bool CProver::provable(const std::string& strStatement, const ProveType pt)
                     {
                         if (opposite_of(s.LHS) != "False" && opposite_of(s.LHS) != negated_text("True"))
                         {
-                            if (proved(opposite_of(s.LHS), ProveType::Unspecified) || provable(opposite_of(s.LHS), pt))
+                            if (proved(opposite_of(s.LHS), ProveType::Unspecified) || try_provable(opposite_of(s.LHS), pt))
                             {
                                 if (s.RHS == "False" || s.RHS == negated_text("True"))
                                 {
@@ -794,7 +809,7 @@ bool CProver::provable(const std::string& strStatement, const ProveType pt)
                     {
                         if (s.RHS != "False" && s.RHS != negated_text("True"))
                         {
-                            if (proved(s.RHS, ProveType::Unspecified) || provable(s.RHS, pt))
+                            if (proved(s.RHS, ProveType::Unspecified) || try_provable(s.RHS, pt))
                             {
                                 remove_from_proving(strStatement);
                                 add_as_proved(strStatement, pt);
@@ -862,7 +877,7 @@ bool CProver::provable(const std::string& strStatement, const ProveType pt)
                     {
                         if (s.RHS != "False" && s.RHS != negated_text("True"))
                         {
-                            if (provable(s.LHS, pt) && provable(s.RHS, pt))
+                            if (try_provable(s.LHS, pt) && try_provable(s.RHS, pt))
                             {
                                 remove_from_proving(strStatement);
                                 add_as_proved(strStatement, pt);
@@ -962,6 +977,36 @@ bool CProver::not_provable(const std::string& strStatement, const ProveType pt)
     return !provable(strStatement, pt);
 }
 
+bool CProver::try_provable(const std::string& strStatement, const ProveType pt)
+{
+    const bool bProv = provable(strStatement, pt);
+
+    if (bProv)
+    {
+        if (!try_proved(strStatement))
+        {
+            // do something
+
+            add_as_proved(g_provSym + strStatement, pt);
+
+
+            m_try_proved.push_back(strStatement);
+            m_try_proved.push_back(g_provSym + strStatement);
+
+        }
+    }
+
+    return bProv;
+}
+
+
+bool CProver::try_not_provable(const std::string& strStatement, const ProveType pt)
+{
+    const bool bNotProv = try_not_provable(strStatement, pt);
+
+    return bNotProv;
+}
+
 bool CProver::is_proving(const std::string& strFormula)
 {
     for (auto s : m_proving)
@@ -990,9 +1035,11 @@ bool CProver::known_as_circular(const std::string& strFormula)
 
 bool CProver::proved(const std::string& strFormula, const ProveType pt)
 {
+    const std::string& strFormulaAlt = g_provSym + strFormula;
+
     for (auto s : m_proved)
     {
-        if (s.Name == strFormula)
+        if (s.Name == strFormula || s.Name == strFormulaAlt)
         {
             if (s.PT[ctu32(ProveType::Unspecified)])
             {
@@ -1014,10 +1061,21 @@ bool CProver::proved(const std::string& strFormula, const ProveType pt)
             {
                 return true;
             }
-
-            break;
         }
 
+    }
+
+    return false;
+}
+
+bool CProver::try_proved(const std::string& strFormula)
+{
+    for (auto s : m_try_proved)
+    {
+        if (s == strFormula)
+        {
+            return true;
+        }
     }
 
     return false;
@@ -1120,6 +1178,11 @@ void CProver::add_as_proved(const std::string& strFormula, const ProveType pt)
 
         ps.PT[ctu32(pt)] = true;
 
+    }
+
+    if (strFormula == g_godelText)
+    {
+        qp("Debug: Proved " + g_godelText);
     }
 
     if (strFormula == "Con")
@@ -1524,6 +1587,17 @@ void setup_misc_props()
     g.Conds.push_back(Cond(g_godelText, propC, makeRefs(g_godelText)));
     g_prover->add(g);
 
+    Statement gfact;
+    gfact.Implication = true;
+    gfact.LHS = g_provSym + g_godelText;
+    gfact.RHS = opposite_of(g_godelText);
+    gfact.Name = gfact.LHS + " -> " + gfact.RHS;
+
+    // keep as axiom! ensures if we prove the godel sentence that we prove a contradiction.
+    gfact.Axiom = true;
+
+    g_prover->add(gfact);
+
 
     Statement secit;
     secit.Name = g_secondIncText;
@@ -1531,8 +1605,9 @@ void setup_misc_props()
     secit.LHS = "Con";
     secit.RHS = g_godelText;
 
-    // uncomment to potentially cause an issue.
-    //secit.Axiom = true;
+
+    // may wish to uncomment for experiment.
+    // secit.Axiom = true;
 
 
     g_prover->add(secit);
@@ -1548,12 +1623,7 @@ bool prover_consistent(LockedFunc* pFunc)
         return false;
     }
 
-    /*
-    if (g_prover->proved("Con", ProveType::Unspecified))
-    {
-        return true;
-    }
-    */
+
 
     if (g_bComputingCon)
     {
@@ -1638,10 +1708,10 @@ bool prover_consistent(LockedFunc* pFunc)
         }
 
         bool bP1 = false;
-        bP1 = g_prover->provable(s.Name, ProveType::Program);
+        bP1 = g_prover->try_provable(s.Name, ProveType::Program);
 
         bool bP2 = false;
-        bP2 = g_prover->provable(opposite_of(s.Name), ProveType::Program);
+        bP2 = g_prover->try_provable(opposite_of(s.Name), ProveType::Program);
 
 
         if (bP1 && bP2)
