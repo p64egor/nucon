@@ -2,135 +2,119 @@ Program Started.
 =====Statements=====
 False
 True
-Con
 False -> False
 True -> True
 False -> True
-X -> (True -> X)
+Con
+!(*False)
 2p2e4
 2p2e4 -> 2p2e4
 2p2e4 -> True
 2p2e5
 *This statement is not provable. -> !(This statement is not provable.)
-Con -> This statement is not provable.
 !(False)
 !(True)
-!(Con)
 !(False -> False)
 !(True -> True)
 !(False -> True)
-!(X -> (True -> X))
+!(Con)
+*False
 !(2p2e4)
 !(2p2e4 -> 2p2e4)
 !(2p2e4 -> True)
 !(2p2e5)
 !(*This statement is not provable. -> !(This statement is not provable.))
-!(Con -> This statement is not provable.)
+(*False) -> False
 (False) -> False
 (True) -> False
-(Con) -> False
 (False -> False) -> False
 (True -> True) -> False
 (False -> True) -> False
-(X -> (True -> X)) -> False
+(Con) -> False
 (2p2e4) -> False
 (2p2e4 -> 2p2e4) -> False
 (2p2e4 -> True) -> False
 (2p2e5) -> False
 (*This statement is not provable. -> !(This statement is not provable.)) -> False
-(Con -> This statement is not provable.) -> False
 !(False) -> !(False)
 !(True) -> !(True)
 !(True) -> !(False)
 !(2p2e4) -> !(2p2e4)
 !(True) -> !(2p2e4)
-This statement is not provable. -> !(*This statement is not provable.)
-!(This statement is not provable.) -> !(Con)
+!(!(This statement is not provable.)) -> !(*This statement is not provable.)
+!(False) -> !(*False)
 !(False) -> !(True)
-!(False) -> !(Con)
 !(False) -> !(False -> False)
 !(False) -> !(True -> True)
 !(False) -> !(False -> True)
-!(False) -> !(X -> (True -> X))
+!(False) -> !(Con)
 !(False) -> !(2p2e4)
 !(False) -> !(2p2e4 -> 2p2e4)
 !(False) -> !(2p2e4 -> True)
 !(False) -> !(2p2e5)
 !(False) -> !(*This statement is not provable. -> !(This statement is not provable.))
-!(False) -> !(Con -> This statement is not provable.)
 False -> (True)
-False -> (Con)
 False -> (False -> False)
 False -> (True -> True)
 False -> (False -> True)
-False -> (X -> (True -> X))
+False -> (Con)
+False -> (!(*False))
 False -> (2p2e4)
 False -> (2p2e4 -> 2p2e4)
 False -> (2p2e4 -> True)
 False -> (2p2e5)
 False -> (*This statement is not provable. -> !(This statement is not provable.))
-False -> (Con -> This statement is not provable.)
 False -> (!(False))
 False -> (!(True))
-False -> (!(Con))
 False -> (!(False -> False))
 False -> (!(True -> True))
 False -> (!(False -> True))
-False -> (!(X -> (True -> X)))
+False -> (!(Con))
+False -> (*False)
 False -> (!(2p2e4))
 False -> (!(2p2e4 -> 2p2e4))
 False -> (!(2p2e4 -> True))
 False -> (!(2p2e5))
 False -> (!(*This statement is not provable. -> !(This statement is not provable.)))
-False -> (!(Con -> This statement is not provable.))
+False -> ((*False) -> False)
 False -> ((False) -> False)
 False -> ((True) -> False)
-False -> ((Con) -> False)
 False -> ((False -> False) -> False)
 False -> ((True -> True) -> False)
 False -> ((False -> True) -> False)
-False -> ((X -> (True -> X)) -> False)
+False -> ((Con) -> False)
 False -> ((2p2e4) -> False)
 False -> ((2p2e4 -> 2p2e4) -> False)
 False -> ((2p2e4 -> True) -> False)
 False -> ((2p2e5) -> False)
 False -> ((*This statement is not provable. -> !(This statement is not provable.)) -> False)
-False -> ((Con -> This statement is not provable.) -> False)
 False -> (!(False) -> !(False))
 False -> (!(True) -> !(True))
 False -> (!(True) -> !(False))
 False -> (!(2p2e4) -> !(2p2e4))
 False -> (!(True) -> !(2p2e4))
-False -> (This statement is not provable. -> !(*This statement is not provable.))
-False -> (!(This statement is not provable.) -> !(Con))
+False -> (!(!(This statement is not provable.)) -> !(*This statement is not provable.))
+False -> (!(False) -> !(*False))
 False -> (!(False) -> !(True))
-False -> (!(False) -> !(Con))
 False -> (!(False) -> !(False -> False))
 False -> (!(False) -> !(True -> True))
 False -> (!(False) -> !(False -> True))
-False -> (!(False) -> !(X -> (True -> X)))
+False -> (!(False) -> !(Con))
 False -> (!(False) -> !(2p2e4))
 False -> (!(False) -> !(2p2e4 -> 2p2e4))
 False -> (!(False) -> !(2p2e4 -> True))
 False -> (!(False) -> !(2p2e5))
 False -> (!(False) -> !(*This statement is not provable. -> !(This statement is not provable.)))
-False -> (!(False) -> !(Con -> This statement is not provable.))
 ====================
 
 ===========================
 Debug: Proved Con
 
 Attempting to asses provability of True
-True is Axiom provable.
+True is NOT Axiom provable.
 
 Attempting to asses provability of *True
-*True is Axiom provable.
-
-Attempting to asses provability of X -> (True -> X)
-X -> (True -> X) is Axiom provable.
-
-Attempting to asses provability of !(X -> (True -> X))
-!(X -> (True -> X)) is NOT Axiom provable.
+*True is NOT Axiom provable.
 
 Attempting to asses provability of 2p2e4
 2p2e4 is Axiom provable.
@@ -189,6 +173,9 @@ False is NOT Axiom provable.
 Attempting to asses provability of *False
 *False is NOT Axiom provable.
 
+Attempting to asses provability of !(*False)
+!(*False) is Axiom provable.
+
 Attempting to asses provability of Con -> This statement is not provable.
 Con -> This statement is not provable. is NOT Axiom provable.
 
@@ -199,16 +186,10 @@ Attempting to asses provability of !(Con -> This statement is not provable.)
 ===========================
 
 Attempting to asses provability of True
-True is Program provable.
+True is NOT Program provable.
 
 Attempting to asses provability of *True
-*True is Program provable.
-
-Attempting to asses provability of X -> (True -> X)
-X -> (True -> X) is Program provable.
-
-Attempting to asses provability of !(X -> (True -> X))
-!(X -> (True -> X)) is NOT Program provable.
+*True is NOT Program provable.
 
 Attempting to asses provability of 2p2e4
 2p2e4 is Program provable.
@@ -267,6 +248,9 @@ False is NOT Program provable.
 Attempting to asses provability of *False
 *False is NOT Program provable.
 
+Attempting to asses provability of !(*False)
+!(*False) is Program provable.
+
 Attempting to asses provability of Con -> This statement is not provable.
 Con -> This statement is not provable. is NOT Program provable.
 
@@ -277,16 +261,10 @@ Attempting to asses provability of !(Con -> This statement is not provable.)
 ===========================
 
 Attempting to asses provability of True
-True is Unspecified provable.
+True is NOT Unspecified provable.
 
 Attempting to asses provability of *True
-*True is Unspecified provable.
-
-Attempting to asses provability of X -> (True -> X)
-X -> (True -> X) is Unspecified provable.
-
-Attempting to asses provability of !(X -> (True -> X))
-!(X -> (True -> X)) is NOT Unspecified provable.
+*True is NOT Unspecified provable.
 
 Attempting to asses provability of 2p2e4
 2p2e4 is Unspecified provable.
@@ -344,6 +322,9 @@ False is NOT Unspecified provable.
 
 Attempting to asses provability of *False
 *False is NOT Unspecified provable.
+
+Attempting to asses provability of !(*False)
+!(*False) is Unspecified provable.
 
 Attempting to asses provability of Con -> This statement is not provable.
 Con -> This statement is not provable. is NOT Unspecified provable.

@@ -68,8 +68,6 @@ void test()
     forms.push_back("True");
     forms.push_back(g_provSym + "True");
 
-    forms.push_back("X -> (True -> X)");
-    forms.push_back(negated_text("X -> (True -> X)"));
     forms.push_back("2p2e4");
     forms.push_back(negated_text("2p2e4"));
 
@@ -98,12 +96,21 @@ void test()
 
     forms.push_back("False");
     forms.push_back(g_provSym + "False");
+    forms.push_back(negated_text(g_provSym + "False"));
 
 
     forms.push_back(g_secondIncText);
     forms.push_back(negated_text(g_secondIncText));
 
 
+    for (auto s : forms)
+    {
+        if (!balanced_parentheses(s))
+        {
+            fqassert("Unbalanced/MisUse of parentheses for: " + s);
+            return;
+        }
+    }
 
     qpc("===========================");
     printer.print_provability_tests(ProveType::Axiom, forms);

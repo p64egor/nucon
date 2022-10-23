@@ -39,7 +39,10 @@ const static std::string g_secondIncText = std::string("Con") + " -> " + g_godel
 
 
 std::string negated_text(const std::string& str);
+
 std::string opposite_of(const std::string& str);
+
+bool balanced_parentheses(const std::string& str);
 
 std::vector<std::string> makeRefs(const std::string& strList);
 
@@ -124,11 +127,14 @@ void setup_misc_props();
 class CProver
 {
 public:
+
     CProver();
+
+    std::string opposite_of(const std::string& str);
 
     void add_to_lang(const Statement& statement);
 
-    std::vector<Statement>& statements();
+    const std::vector<Statement>& statements() const;
 
     bool exists(const std::string& strStatement);
 
@@ -150,6 +156,8 @@ public:
     bool is_proving(const std::string& strFormula);
 
     bool proved(const std::string& strFormula, const ProveType pt);
+    bool proved_or_is_axiom(const std::string& strFormula, const ProveType pt);
+    bool is_axiom(const std::string& strFormula);
 
     bool try_proved(const std::string& strFormula);
 
@@ -166,6 +174,7 @@ protected:
 
 private:
     std::vector<Statement> m_statements;
+    std::vector<std::string> m_axioms;
 
     std::vector<std::string> m_proving;
     std::vector<ProvedStatement> m_proved;

@@ -71,34 +71,71 @@ std::string negated_text(const std::string& str)
 
 std::string opposite_of(const std::string& str)
 {
-    std::string strB;
-    strB.append(str);
-
-    if (strB.size() > 1)
+    if (g_prover == nullptr)
     {
-        bool bHasNeg = strB[0] == '!';
-        bool bHasParen = strB[1] == '(';
-
-        if (bHasNeg)
-        {
-            strB.erase(strB.begin());
-
-            if (bHasParen)
-            {
-                strB.erase(strB.begin());
-                strB.erase(strB.end() - 1);
-            }
-
-            return strB;
-        }
-        else
-        {
-            return negated_text(strB);
-        }
+        return "";
     }
 
-    return negated_text(strB);
+    return g_prover->opposite_of(str);
+}
 
+bool balanced_parentheses(const std::string& str)
+{
+    uint32_t nLeft = 0;
+    uint32_t nRight = 0;
+
+    bool bGotLeft = false;
+    bool bGotFirstLeft = false;
+
+    uint32_t nSymsPastSinceLastLeft = 0;
+    for (uint32_t iii = 0; iii < str.size(); ++iii)
+    {
+        if (str[iii] == '(')
+        {
+            nLeft += 1;
+
+            bGotLeft = true;
+            bGotFirstLeft = true;
+
+            nSymsPastSinceLastLeft = 0;
+        }
+        else if (str[iii] == ')')
+        {
+            nRight += 1;
+
+            if (nSymsPastSinceLastLeft == 0)
+            {
+                // do not allow the () case.
+                return false;
+            }
+
+            if (!bGotFirstLeft && !bGotLeft)
+            {
+                // a right should not come before the first left.
+                return false;
+            }
+
+            bGotLeft = false;
+        }
+
+        nSymsPastSinceLastLeft += 1;
+    }
+
+
+    // last paren should not be a left
+    if (bGotLeft)
+    {
+        return false;
+    }
+
+
+    if (nLeft != nRight)
+    {
+        return false;
+    }
+
+
+    return true;
 }
 
 std::vector<std::string> makeRefs(const std::string& strList)
@@ -207,6 +244,63 @@ CProver::CProver() : m_bInit(false)
     setup();
 }
 
+std::string CProver::opposite_of(const std::string& str)
+{
+    std::string strB;
+    strB.append(str);
+
+    if (strB.size() == 0)
+    {
+        fqassert("opposite_of error: str was empty!");
+    }
+
+    for (auto& s : m_statements)
+    {
+
+        if (s.Name == str)
+        {
+            bool bHasNeg = strB[0] == '!';
+            bool bHasParen = strB[1] == '(';
+
+            if (s.Implication && !s.Negated)
+            {
+                if (s.LHS[0] == '!')
+                {
+                    return negated_text(strB);
+                }
+            }
+
+            if (bHasNeg)
+            {
+                strB.erase(strB.begin());
+
+                if (bHasParen)
+                {
+                    strB.erase(strB.begin());
+                    strB.erase(strB.end() - 1);
+
+                    if (!balanced_parentheses(strB))
+                    {
+                        fqassert("unbalanced parentheses result in opposite_of");
+                    }
+                }
+
+                return strB;
+            }
+
+            break;
+
+        }
+
+    }
+
+
+
+    return negated_text(strB);
+
+}
+
+
 void CProver::add_to_lang(const Statement& statement)
 {
     if (m_bInit)
@@ -217,6 +311,19 @@ void CProver::add_to_lang(const Statement& statement)
 
     if (exists(statement.Name))
     {
+        // allow axiom status to be updated to true.
+        if (statement.Axiom)
+        {
+            for (auto& s : m_statements)
+            {
+                if (s.Name == statement.Name)
+                {
+                    s.Axiom = true;
+                    return;
+                }
+            }
+        }
+
         return;
     }
 
@@ -320,30 +427,28 @@ void CProver::add_to_lang(const Statement& statement)
     if (statement.Axiom)
     {
         add_as_proved(statement.Name, ProveType::Unspecified);
-    }
 
-    const bool bEnsureNegWff = true;
-
-    if (bEnsureNegWff)
-    {
-        if (!exists(opposite_of(statement.Name)))
+        bool bExists = false;
+        for (auto s : m_axioms)
         {
-            Statement os;
-            os = statement;
-            os.Axiom = false;
+            if (s == statement.Name)
+            {
+                bExists = true;
+                break;
+            }
+        }
 
-            os.Negated = !statement.Negated;
-
-            os.Name = opposite_of(statement.Name);
-
-            m_statements.push_back(os);
+        if (!bExists)
+        {
+            m_axioms.push_back(statement.Name);
         }
     }
 
 
+
 }
 
-std::vector<Statement>& CProver::statements()
+const std::vector<Statement>& CProver::statements() const
 {
     return m_statements;
 }
@@ -504,14 +609,14 @@ void CProver::setup()
 
     m_try_proved.clear();
 
+    m_axioms.clear();
+
     m_statements.clear();
 
 
 
     add_to_lang(false_statement());
     add_to_lang(true_statement());
-
-    add_to_lang(con_statement());
 
     Statement fif;
     fif.Name = "False -> False";
@@ -534,8 +639,118 @@ void CProver::setup()
     fit.Implication = true;
     g_prover->add_to_lang(fit);
 
-    Cond condxtx = Cond("X -> (True -> X)", x_implies_true_implies_x);
-    setup_statement("X -> (True -> X)", condxtx, true);
+
+
+    /*
+    Statement ax1;
+    ax1.Name = "True -> (False -> True)";
+    ax1.Implication = true;
+    ax1.LHS = "True";
+    ax1.RHS = "False -> True";
+    ax1.Axiom = true;
+    add_to_lang(ax1);
+
+    ax1.Name = "False -> (True -> False)";
+    ax1.Implication = true;
+    ax1.LHS = "True";
+    ax1.RHS = "False -> True";
+    ax1.Axiom = true;
+    add_to_lang(ax1);
+
+
+    ax1.Name = "True -> (True -> True)";
+    ax1.Implication = true;
+    ax1.LHS = "True";
+    ax1.RHS = "True -> True";
+    ax1.Axiom = true;
+    add_to_lang(ax1);
+
+
+    ax1.Name = "False -> (False -> False)";
+    ax1.Implication = true;
+    ax1.LHS = "False";
+    ax1.RHS = "False -> False";
+    ax1.Axiom = true;
+    add_to_lang(ax1);
+
+
+    Statement ax2;
+
+    ax2.Implication = true;
+    ax2.LHS = "True -> (False -> True)";
+    ax2.RHS = "(True -> False) -> (True -> True)";
+    ax2.Name = "(" + ax2.LHS + ")" + " -> " + "(" + ax2.RHS + ")";
+    ax2.Axiom = true;
+    add_to_lang(ax2);
+
+    ax2.Implication = true;
+    ax2.LHS = "False -> (True -> False)";
+    ax2.RHS = "(False -> True) -> (False -> False)";
+    ax2.Name = "(" + ax2.LHS + ")" + " -> " + "(" + ax2.RHS + ")";
+    ax2.Axiom = true;
+    add_to_lang(ax2);
+
+    ax2.Implication = true;
+    ax2.LHS = "True -> (True -> True)";
+    ax2.RHS = "(True -> True) -> (True -> True)";
+    ax2.Name = "(" + ax2.LHS + ")" + " -> " + "(" + ax2.RHS + ")";
+    ax2.Axiom = true;
+    add_to_lang(ax2);
+
+    ax2.Implication = true;
+    ax2.LHS = "False -> (False -> False)";
+    ax2.RHS = "(False -> False) -> (False -> False)";
+    ax2.Name = "(" + ax2.LHS + ")" + " -> " + "(" + ax2.RHS + ")";
+    ax2.Axiom = true;
+    add_to_lang(ax2);
+
+
+
+
+    Statement ax3;
+
+    ax3.Implication = true;
+    ax3.LHS = "!(True) -> !(True)";
+    ax3.RHS = "True -> True";
+    ax3.Name = "(" + ax3.LHS + ")" + " -> " + "(" + ax3.RHS + ")";
+    ax3.Axiom = true;
+    add_to_lang(ax3);
+
+    ax3.Implication = true;
+    ax3.LHS = "!(False) -> !(False)";
+    ax3.RHS = "False -> False";
+    ax3.Name = "(" + ax3.LHS + ")" + " -> " + "(" + ax3.RHS + ")";
+    ax3.Axiom = true;
+    add_to_lang(ax3);
+
+    ax3.Implication = true;
+    ax3.LHS = "!(True) -> !(False)";
+    ax3.RHS = "False -> True";
+    ax3.Name = "(" + ax3.LHS + ")" + " -> " + "(" + ax3.RHS + ")";
+    ax3.Axiom = true;
+    add_to_lang(ax3);
+
+    ax3.Implication = true;
+    ax3.LHS = "!(False) -> !(True)";
+    ax3.RHS = "True -> False";
+    ax3.Name = "(" + ax3.LHS + ")" + " -> " + "(" + ax3.RHS + ")";
+    ax3.Axiom = true;
+    add_to_lang(ax3);
+    */
+
+
+    // ========================================================================
+
+
+    Statement con = con_statement();
+    add_to_lang(con);
+
+    Statement fprov;
+    fprov.Name = "!(*False)";
+    fprov.Conds = con.Conds;
+    fprov.Negated = true;
+    add_to_lang(fprov);
+
 
     setup_misc_props();
 
@@ -546,10 +761,8 @@ void CProver::setup()
         {
             Statement ns = s;
             ns.Negated = !s.Negated;
-            if (s.Axiom)
-            {
-                ns.Axiom = false;
-            }
+
+            ns.Axiom = false;
 
             ns.Name = opposite_of(s.Name);
             negated.push_back(ns);
@@ -567,10 +780,11 @@ void CProver::setup()
     {
         Statement ns = s;
 
-        if (ns.Negated)
+        if (s.Negated)
         {
+            ns.Axiom = false;
 
-            ns.Negated = !ns.Negated;
+            ns.Negated = !s.Negated;
 
             ns.LHS = opposite_of(s.Name);
             ns.RHS = "False";
@@ -592,12 +806,16 @@ void CProver::setup()
     for (auto s : m_statements)
     {
         Statement nis = s;
-        if (nis.Implication && !nis.Negated)
+        if (s.Implication && !s.Negated)
         {
+
+            nis.Axiom = false;
+
             nis.LHS = opposite_of(s.RHS);
             nis.RHS = opposite_of(s.LHS);
 
             nis.Name = nis.LHS + " -> " + nis.RHS;
+
 
             transps.push_back(nis);
         }
@@ -632,8 +850,33 @@ void CProver::setup()
     }
 
 
+    // check we didn't construct any malformed formulas.
+    bool bParenErr = false;
+    std::string strParenErrStr;
+    for (auto& s : m_statements)
+    {
+        if (!balanced_parentheses(s.Name))
+        {
+            strParenErrStr = s.Name;
+            bParenErr = true;
+            break;
+        }
 
+        if (s.Implication)
+        {
+            if (!balanced_parentheses(s.LHS) || !balanced_parentheses(s.RHS))
+            {
+                strParenErrStr = s.Name;
+                bParenErr = true;
+                break;
+            }
+        }
+    }
 
+    if (bParenErr)
+    {
+        fqassert("Parentheses error!" + strParenErrStr);
+    }
 
     m_bInit = true;
 
@@ -648,20 +891,76 @@ bool CProver::provable(const std::string& strStatement, const ProveType pt)
         return false;
     }
 
-    if (strStatement[0] == g_provSym[0])
-    {
-        std::string strProvAlt = strStatement;
-        strProvAlt.erase(strProvAlt.begin());
+    // ========================================================================
+    // Sanity checks that we haven't already proved false.
 
-        return provable(strProvAlt, pt);
+    if (proved_or_is_axiom("False", ProveType::Unspecified) || proved_or_is_axiom(negated_text("True"), ProveType::Unspecified))
+    {
+        return true;
     }
 
-    if (proved("False", ProveType::Unspecified) || proved(negated_text("True"), ProveType::Unspecified))
+    if (proved_or_is_axiom(g_provSym + "False", ProveType::Unspecified))
+    {
+        return true;
+    }
+
+    if (proved_or_is_axiom(g_provSym + negated_text("True"), ProveType::Unspecified))
+    {
+        return true;
+    }
+
+    if (proved_or_is_axiom(negated_text("Con"), ProveType::Unspecified) || proved_or_is_axiom("Con -> False", ProveType::Unspecified))
+    {
+        return true;
+    }
+
+    if (proved_or_is_axiom(g_provSym + negated_text("Con"), ProveType::Unspecified))
+    {
+        return true;
+    }
+
+    if (proved_or_is_axiom("Con -> " + negated_text("True"), ProveType::Unspecified))
     {
         return true;
     }
 
 
+    if (proved_or_is_axiom(g_provSym + "True", ProveType::Unspecified) && proved_or_is_axiom(negated_text(g_provSym + "True"), ProveType::Unspecified))
+    {
+        return true;
+    }
+    // ========================================================================
+
+    if (!is_proving(strStatement))
+    {
+
+        if (strStatement[0] == g_provSym[0])
+        {
+            std::string strProvAlt = strStatement;
+            strProvAlt.erase(strProvAlt.begin());
+
+            m_proving.push_back(strProvAlt);
+
+
+            return provable(strProvAlt, pt);
+        }
+
+        if (strStatement[0] == '!')
+        {
+            const std::string strOpp = opposite_of(strStatement);
+            if (strOpp[0] == g_provSym[0])
+            {
+                std::string strProvAlt = strOpp;
+                strProvAlt.erase(strProvAlt.begin());
+
+                m_proving.push_back(strProvAlt);
+
+                return !provable(strProvAlt, pt);
+            }
+        }
+
+
+    }
 
     if (is_proving(strStatement) && m_proving.size() > 1)
     {
@@ -671,6 +970,8 @@ bool CProver::provable(const std::string& strStatement, const ProveType pt)
             return false;
         }
     }
+
+
 
     if (pt == ProveType::None || pt == ProveType::Empty)
     {
@@ -1174,6 +1475,31 @@ bool CProver::proved(const std::string& strFormula, const ProveType pt)
     return false;
 }
 
+
+bool CProver::proved_or_is_axiom(const std::string& strFormula, const ProveType pt)
+{
+    if (is_axiom(strFormula))
+    {
+        return true;
+    }
+
+    return proved(strFormula, pt);
+}
+
+bool CProver::is_axiom(const std::string& strFormula)
+{
+    for (auto s : m_axioms)
+    {
+        if (s == strFormula)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 bool CProver::try_proved(const std::string& strFormula)
 {
     for (auto s : m_try_proved)
@@ -1375,7 +1701,7 @@ bool statement_holds(const Statement& statement)
         bool bGotL = false;
         bool bGotR = false;
 
-        std::vector<Statement>& statements = g_prover->statements();
+        const std::vector<Statement>& statements = g_prover->statements();
 
         for (uint32_t iii = 0; iii < statements.size(); ++iii)
         {
@@ -1453,7 +1779,7 @@ bool statement_provably_holds(const Statement& statement)
         bool bGotL = false;
         bool bGotR = false;
 
-        std::vector<Statement>& statements = g_prover->statements();
+        const std::vector<Statement>& statements = g_prover->statements();
 
         for (uint32_t iii = 0; iii < statements.size(); ++iii)
         {
@@ -1521,9 +1847,14 @@ bool refcon(const Statement& statement)
         {
             return true;
         }
+
+        if (statement.LHS == negated_text(g_provSym + "False") || statement.RHS == negated_text(g_provSym + "False"))
+        {
+            return true;
+        }
     }
 
-    if (statement.Name == "Con")
+    if (statement.Name == "Con" || statement.Name == negated_text(g_provSym + "False"))
     {
         return true;
     }
@@ -1648,17 +1979,18 @@ bool propC(LockedFunc* pFunc)
 
 void setup_misc_props()
 {
-    //  add whatever custom props here.
+    // add whatever custom props here.
 
 
+
+    // Uncomment to introduce contradiction:
     /*
-    Uncomment to introduce contradiction:
     Statement ncon;
     ncon.Axiom = true;
     ncon.Name = "!(Con)";
     ncon.Conds.push_back(Cond("!(Con)", prover_consistent));
     ncon.Negated = true;
-    g_prover->add(ncon);
+    g_prover->add_to_lang(ncon);
     */
 
     Statement st2p2e4;
@@ -1741,7 +2073,7 @@ bool prover_consistent(LockedFunc* pFunc)
 
     g_bComputingCon = true;
 
-    std::vector<Statement>& statements = g_prover->statements();
+    const std::vector<Statement>& statements = g_prover->statements();
 
     for (auto s : statements)
     {
@@ -1752,7 +2084,8 @@ bool prover_consistent(LockedFunc* pFunc)
             return false;
         }
 
-        // these are important to keep
+        // ====================================================================
+        // ALL OF THESE CHECKS ARE TO PREVENT CIRCULAR EVALS OF CONSISTENCY.
         if (refcon(s))
         {
             continue;
@@ -1768,6 +2101,28 @@ bool prover_consistent(LockedFunc* pFunc)
         {
             continue;
         }
+
+        if (g_prover->statement_ref_statement(s.Name, g_provSym + "Con"))
+        {
+            continue;
+        }
+
+        if (g_prover->statement_ref_statement(s, negated_text(g_provSym + "Con")))
+        {
+            continue;
+        }
+
+
+        if (g_prover->statement_ref_statement(s.Name, g_provSym + "False"))
+        {
+            continue;
+        }
+
+        if (g_prover->statement_ref_statement(s, negated_text(g_provSym + "False")))
+        {
+            continue;
+        }
+
 
         if (s.Implication && !s.Negated)
         {
@@ -1805,6 +2160,8 @@ bool prover_consistent(LockedFunc* pFunc)
         {
             continue;
         }
+
+        // ====================================================================
 
 
         if (true_provable(statement_holds(s)) && true_disprovable(statement_holds(s)))
