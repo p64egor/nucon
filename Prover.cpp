@@ -585,7 +585,7 @@ Statement CProver::false_statement()
 Statement CProver::true_statement()
 {
     Cond cond = Cond("True", true_truth);
-    return setup_statement("True", cond);
+    return setup_statement("True", cond, true);
 
 }
 
@@ -1388,6 +1388,12 @@ bool CProver::try_provable(const std::string& strStatement, const ProveType pt)
 {
     const bool bProv = provable(strStatement, pt);
 
+    if (m_proving.size() == 1)
+    {
+        remove_from_proving(strStatement);
+    }
+
+
     if (bProv)
     {
         if (!try_proved(strStatement))
@@ -1409,10 +1415,16 @@ bool CProver::try_provable(const std::string& strStatement, const ProveType pt)
 
 bool CProver::try_not_provable(const std::string& strStatement, const ProveType pt)
 {
-    const bool bNotProv = try_not_provable(strStatement, pt);
+    const bool bNotProv = !try_provable(strStatement, pt);
 
     return bNotProv;
 }
+
+void CProver::clear_is_proving()
+{
+    m_proving.clear();
+}
+
 
 bool CProver::is_proving(const std::string& strFormula)
 {
@@ -1636,6 +1648,7 @@ void CProver::add_as_proved(const std::string& strFormula, const ProveType pt)
 
     m_proved.push_back(ps);
 
+    remove_from_proving(strFormula);
 
 
 

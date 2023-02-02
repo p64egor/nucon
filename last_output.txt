@@ -111,10 +111,10 @@ False -> (!(False) -> !(*This statement is not provable. -> !(This statement is 
 Debug: Proved Con
 
 Attempting to asses provability of True
-True is NOT Axiom provable.
+True is Axiom provable.
 
 Attempting to asses provability of *True
-*True is NOT Axiom provable.
+*True is Axiom provable.
 
 Attempting to asses provability of 2p2e4
 2p2e4 is Axiom provable.
@@ -186,10 +186,10 @@ Attempting to asses provability of !(Con -> This statement is not provable.)
 ===========================
 
 Attempting to asses provability of True
-True is NOT Program provable.
+True is Program provable.
 
 Attempting to asses provability of *True
-*True is NOT Program provable.
+*True is Program provable.
 
 Attempting to asses provability of 2p2e4
 2p2e4 is Program provable.
@@ -261,10 +261,10 @@ Attempting to asses provability of !(Con -> This statement is not provable.)
 ===========================
 
 Attempting to asses provability of True
-True is NOT Unspecified provable.
+True is Unspecified provable.
 
 Attempting to asses provability of *True
-*True is NOT Unspecified provable.
+*True is Unspecified provable.
 
 Attempting to asses provability of 2p2e4
 2p2e4 is Unspecified provable.

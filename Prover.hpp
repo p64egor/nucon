@@ -168,6 +168,9 @@ protected:
     bool try_provable(const std::string& strStatement, const ProveType pt);
     bool try_not_provable(const std::string& strStatement, const ProveType pt);
 
+    // used by the printer function.
+    void clear_is_proving();
+
     friend class LockedFunc;
     friend class CPrinter;
     friend bool prover_consistent(LockedFunc* pFunc);
